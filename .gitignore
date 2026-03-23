@@ -1,0 +1,116 @@
+# =========================
+# Dependencies
+# =========================
+node_modules/
+**/node_modules/
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# =========================
+# Build output
+# =========================
+dist/
+build/
+out/
+coverage/
+
+# React / Vite / Tailwind
+frontend/dist/
+frontend/.vite/
+frontend/node_modules/
+
+# NestJS
+backend/dist/
+backend/node_modules/
+
+# =========================
+# Cache / Temp
+# =========================
+.cache/
+.tmp/
+temp/
+
+# =========================
+# Upload files (ảnh sản phẩm)
+# =========================
+uploads/
+images/
+public/uploads/
+public/images/
+files/
+
+# =========================
+# Database
+# =========================
+*.mdf
+*.ldf
+*.bak
+*.sql
+
+# SQL Server local DB files
+database/
+db_backup/
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# Runtime
+# =========================
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# =========================
+# NestJS specific
+# =========================
+*.tsbuildinfo
+
+# =========================
+# Test
+# =========================
+coverage/
+.nyc_output/
+
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+
+# =========================
+# Build / Release
+# =========================
+*.exe
+*.msi
+*.zip
+*.rar
+
+# =========================
+# Windows
+# =========================
+*.tmp
+*.temp
