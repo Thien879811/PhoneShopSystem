@@ -95,7 +95,9 @@ export class InventoryService {
       throw new NotFoundException(`Inventory with ID ${id} not found`);
     }
 
-    Object.assign(inventory, updateInventoryDto);
+    const { lowStock, createdAt, updatedAt, id: _id, ...updateData } = updateInventoryDto as any;
+    Object.assign(inventory, updateData);
+    
     const savedInventory = await this.inventoryRepository.save(inventory);
     return this.mapToResponse(savedInventory);
   }

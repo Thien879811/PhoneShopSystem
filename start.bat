@@ -7,7 +7,6 @@ echo ===================================
 
 echo.
 npm install
-
 npm run dev
 
 pause
