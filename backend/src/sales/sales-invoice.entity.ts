@@ -32,6 +32,9 @@ export class SalesInvoice {
   @OneToMany(() => SalesInvoiceItem, (item) => item.invoice, { cascade: true })
   items: SalesInvoiceItem[];
 
+  @Column({ name: 'repair_order_id', type: 'int', nullable: true })
+  repairOrderId: number;
+
   @CreateDateColumn({ name: 'created_at', type: 'datetime' })
   createdAt: Date;
 }
@@ -48,7 +51,7 @@ export class SalesInvoiceItem {
   @JoinColumn({ name: 'invoice_id' })
   invoice: SalesInvoice;
 
-  @Column({ name: 'product_id', type: 'int' })
+  @Column({ name: 'product_id', type: 'int', nullable: true })
   productId: number;
 
   @Column({ name: 'product_name', type: 'nvarchar', length: 255, nullable: true })

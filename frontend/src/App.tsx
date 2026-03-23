@@ -10,6 +10,8 @@ import SalesPage from './pages/SalesPage';
 import ImeiPage from './pages/ImeiPage';
 import CategoriesPage from './pages/CategoriesPage';
 import BrandsPage from './pages/BrandsPage';
+import RepairsPage from './pages/RepairsPage';
+import RepairServicesPage from './pages/RepairServicesPage';
 
 const App: React.FC = () => {
   return (
@@ -21,6 +23,8 @@ const App: React.FC = () => {
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/brands" element={<BrandsPage />} />
+          <Route path="/repairs" element={<RepairsPage />} />
+          <Route path="/repair-services" element={<RepairServicesPage />} />
           <Route path="/suppliers" element={<SuppliersPage />} />
           <Route path="/imports" element={<ImportsPage />} />
           <Route path="/stocks" element={<StocksPage />} />

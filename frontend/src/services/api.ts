@@ -206,4 +206,62 @@ export const brandsApi = {
   delete: async (id: number) => (await api.delete(`/brands/${id}`)).data,
 };
 
+// ─── REPAIRS ─────────────────────────────────
+export interface RepairOrderItem {
+  id: number;
+  serviceId: number;
+  serviceName: string;
+  serviceType: 'REPAIR' | 'REPLACEMENT';
+  productId?: number;
+  quantity: number;
+  price: number;
+  total: number;
+  createdAt: string;
+}
+
+export interface RepairOrder {
+  id: number;
+  code: string;
+  customerId?: number;
+  customerName?: string;
+  customerPhone?: string;
+  deviceName: string;
+  imei?: string;
+  issueDescription?: string;
+  receivedDate: string;
+  expectedReturnDate?: string;
+  totalAmount: number;
+  status: string;
+  note?: string;
+  items: RepairOrderItem[];
+  logs: any[];
+  createdAt: string;
+}
+
+export interface RepairService {
+  id: number;
+  name: string;
+  serviceType: 'REPAIR' | 'REPLACEMENT';
+  defaultPrice: number;
+  productId?: number;
+  description?: string;
+  status: string;
+  createdAt: string;
+}
+
+export const repairsApi = {
+  getAll: async (params: any = {}) => (await api.get('/repair-orders', { params })).data,
+  getById: async (id: number) => (await api.get(`/repair-orders/${id}`)).data,
+  create: async (data: any) => (await api.post('/repair-orders', data)).data,
+  update: async (id: number, data: any) => (await api.put(`/repair-orders/${id}`, data)).data,
+  addService: async (id: number, data: any) => (await api.post(`/repair-orders/${id}/add-service`, data)).data,
+  addItem: async (id: number, item: any) => (await api.post(`/repair-orders/${id}/items`, item)).data, // Keep for backward compat
+  removeItem: async (id: number, itemId: number) => (await api.delete(`/repair-orders/${id}/items/${itemId}`)).data,
+  complete: async (id: number) => (await api.post(`/repair-orders/${id}/complete`)).data,
+  quickImport: async (data: any) => (await api.post('/repair-orders/quick-import', data)).data,
+  // Standard Services
+  getAllServices: async () => (await api.get('/repair-orders/services')).data,
+  createService: async (data: any) => (await api.post('/repair-orders/services', data)).data,
+};
+
 export default api;

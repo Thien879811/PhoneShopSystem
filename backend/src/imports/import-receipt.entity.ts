@@ -34,6 +34,15 @@ export class ImportReceipt {
   @Column({ type: 'nvarchar', length: 20, default: ImportReceiptStatus.DRAFT })
   status: ImportReceiptStatus;
 
+  @Column({ name: 'type', type: 'nvarchar', length: 50, default: 'NORMAL' })
+  type: string;
+
+  @Column({ name: 'source', type: 'nvarchar', length: 50, nullable: true })
+  source: string;
+
+  @Column({ name: 'repair_order_id', type: 'int', nullable: true })
+  repairOrderId: number;
+
   @OneToMany(() => ImportReceiptItem, (item) => item.receipt, { cascade: true })
   items: ImportReceiptItem[];
 

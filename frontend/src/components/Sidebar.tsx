@@ -11,6 +11,8 @@ import {
   Smartphone,
   Tags,
   Apple,
+  Wrench,
+  ShieldCheck,
 } from 'lucide-react';
 
 const navItems = [
@@ -36,6 +38,13 @@ const navItems = [
       { to: '/stocks', label: 'Tồn kho', icon: Warehouse },
       { to: '/movements', label: 'Lịch sử kho', icon: History },
       { to: '/imei', label: 'Quản lý IMEI', icon: Smartphone },
+    ],
+  },
+  {
+    section: 'Sửa chữa',
+    items: [
+      { to: '/repairs', label: 'Phiếu sửa chữa', icon: Wrench },
+      { to: '/repair-services', label: 'Dịch vụ sửa chữa', icon: ShieldCheck },
     ],
   },
   {

@@ -23,6 +23,13 @@ import { StocksModule } from './stocks/stocks.module';
 import { SalesModule } from './sales/sales.module';
 import { CategoriesModule } from './categories/categories.module';
 import { BrandsModule } from './brands/brands.module';
+import { RepairsModule } from './repairs/repairs.module';
+
+// Entities for TypeORM (needed inside forRoot if using sync and want them grouped here)
+import { RepairOrder } from './repairs/entities/repair-order.entity';
+import { RepairService } from './repairs/entities/repair-service.entity';
+import { RepairOrderItem } from './repairs/entities/repair-order-item.entity';
+import { RepairStatusLog } from './repairs/entities/repair-status-log.entity';
 
 @Module({
   imports: [
@@ -52,6 +59,10 @@ import { BrandsModule } from './brands/brands.module';
           ProductImei,
           Category,
           Brand,
+          RepairOrder,
+          RepairService,
+          RepairOrderItem,
+          RepairStatusLog,
         ],
         synchronize: true,
         options: {
@@ -71,6 +82,7 @@ import { BrandsModule } from './brands/brands.module';
     SalesModule,
     CategoriesModule,
     BrandsModule,
+    RepairsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

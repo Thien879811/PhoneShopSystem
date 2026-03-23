@@ -6,6 +6,7 @@ export enum MovementType {
   RETURN = 'RETURN',
   ADJUST = 'ADJUST',
   TRANSFER = 'TRANSFER',
+  REPAIR_OUT = 'REPAIR_OUT',
 }
 
 @Entity('stock_movements')
