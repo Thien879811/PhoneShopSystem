@@ -6,7 +6,7 @@ echo Starting Phone Shop System (DEV)...
 echo ===================================
 
 echo.
-npm install
+npm install:all
 npm run dev
 
 pause

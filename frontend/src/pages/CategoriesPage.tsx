@@ -63,18 +63,20 @@ export const CategoriesPage: React.FC = () => {
               <tr>
                 <th>ID</th>
                 <th>Tên danh mục</th>
+                <th>Tiền tố (Mã)</th>
                 <th>Mô tả</th>
                 <th style={{ textAlign: 'center' }}>Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {data.length === 0 ? (
-                <tr><td colSpan={4}><div className="empty-state"><Tags size={40} /><p>Chưa có danh mục nào</p></div></td></tr>
+                <tr><td colSpan={5}><div className="empty-state"><Tags size={40} /><p>Chưa có danh mục nào</p></div></td></tr>
               ) : (
                 data.map((item) => (
                   <tr key={item.id}>
                     <td>{item.id}</td>
                     <td><span className="cell-main">{item.name}</span></td>
+                    <td><span className="badge badge-info">{item.prefix || '—'}</span></td>
                     <td>{item.description || '—'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
@@ -103,6 +105,7 @@ export const CategoriesPage: React.FC = () => {
 
 const CategoryFormModal: React.FC<{ item: Category | null; onClose: () => void; onSave: (d: any) => void }> = ({ item, onClose, onSave }) => {
   const [name, setName] = useState(item?.name || '');
+  const [prefix, setPrefix] = useState(item?.prefix || '');
   const [desc, setDesc] = useState(item?.description || '');
 
   return (
@@ -112,11 +115,16 @@ const CategoryFormModal: React.FC<{ item: Category | null; onClose: () => void; 
           <h3>{item ? 'Sửa danh mục' : 'Thêm danh mục'}</h3>
           <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={18} /></button>
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); onSave({ name, description: desc }); }}>
+        <form onSubmit={(e) => { e.preventDefault(); onSave({ name, prefix, description: desc }); }}>
           <div className="modal-body">
             <div className="form-group">
               <label className="form-label">Tên danh mục *</label>
               <input className="form-input" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Tiền tố mã (Prefix) *</label>
+              <input className="form-input" value={prefix} onChange={(e) => setPrefix(e.target.value.toUpperCase())} placeholder="VD: SP, LT, PK..." required />
+              <small style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Dùng để sinh mã sản phẩm tự động (VD: SP-0001)</small>
             </div>
             <div className="form-group">
               <label className="form-label">Mô tả</label>

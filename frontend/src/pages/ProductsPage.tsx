@@ -233,10 +233,12 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, onClose, o
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.code.trim() || !form.name.trim()) {
-      alert('Vui lòng nhập Mã SP và Tên sản phẩm');
+    if (!form.name.trim()) {
+      alert('Vui lòng nhập Tên sản phẩm');
       return;
     }
+    // If not creating NEW product, code should be checked if needed, 
+    // but backend handles empty code for new ones anyway.
     onSave(form);
   };
 
@@ -251,8 +253,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, onClose, o
           <div className="modal-body">
             <div className="form-grid">
               <div className="form-group">
-                <label className="form-label">Mã sản phẩm *</label>
-                <input className="form-input" value={form.code} onChange={(e) => handleChange('code', e.target.value)} placeholder="VD: IP15-256" />
+                <label className="form-label">Mã sản phẩm</label>
+                <input className="form-input" value={form.code} onChange={(e) => handleChange('code', e.target.value)} placeholder="Để trống để tự động sinh mã" />
               </div>
               <div className="form-group">
                 <label className="form-label">Tên sản phẩm *</label>
