@@ -1,6 +1,6 @@
 # 📱 PhoneShop Warehouse Management System
 
-Hệ thống Quản lý Kho (Warehouse Management System - WMS) chuyên dụng cho cửa hàng điện thoại và bán lẻ, được xây dựng với kiến trúc hiện đại, hỗ trợ quản lý tồn kho theo lô (FIFO), theo dõi IMEI và báo cáo doanh thu.
+Hệ thống Quản lý Kho (Warehouse Management System - WMS) chuyên dụng cho cửa hàng điện thoại và bán lẻ, được xây dựng với kiến trúc hiện đại, hỗ trợ quản lý tồn kho theo lô (FIFO), theo dõi IMEI và quy trình sửa chữa chuyên nghiệp.
 
 ---
 
@@ -11,8 +11,8 @@ Hệ thống Quản lý Kho (Warehouse Management System - WMS) chuyên dụng c
 - **ORM:** TypeORM
 - **Tính năng chính:** 
   - API RESTful với tiền tố `/api`.
-  - Quản lý giao dịch (Transactions) để đảm bảo tính toàn vẹn dữ liệu kho.
-  - Logic trừ kho theo nguyên tắc **FIFO** (Nhập trước - Xuất trước).
+  - Quản lý giao dịch (Transactions) đảm bảo tính toàn vẹn dữ liệu.
+  - Logic trừ kho theo nguyên tắc **FIFO** (First In - First Out).
   - Tự động ghi log lịch sử biến động kho (`stock_movements`).
 
 ### **Frontend: React + Vite**
@@ -20,9 +20,75 @@ Hệ thống Quản lý Kho (Warehouse Management System - WMS) chuyên dụng c
 - **Icons:** Lucide React.
 - **Tính năng chính:**
   - Dashboard tổng quan với các chỉ số real-time.
-  - Quản lý danh mục sản phẩm, nhà cung cấp.
-  - Form nhập hàng/bán hàng linh hoạt với nhiều dòng sản phẩm.
+  - Quản lý danh mục sản phẩm, nhà cung cấp & dịch vụ sửa chữa.
+  - Form nhập hàng/bán hàng linh hoạt.
   - Theo dõi tồn kho tổng hợp và lịch sử chi tiết.
+
+---
+
+## 🔄 Quy trình Nghiệp vụ (Business Flow)
+
+### 1. Quy trình Nhập hàng (Import Flow)
+Mô tả cách thức hàng hóa được đưa vào kho và quản lý theo lô.
+
+```mermaid
+graph TD
+    A[📦 Nhà cung cấp] -->|Cung cấp hàng| B(Tạo Phiếu nhập - Import Receipt)
+    B --> C{Phân loại?}
+    C -->|Có IMEI| D[Quét mã IMEI từng máy]
+    C -->|Không có IMEI| E[Nhập số lượng tổng]
+    D --> F[Khởi tạo Lô hàng - Stock Batch]
+    E --> F
+    F --> G[Cập nhật Tồn kho thực tế]
+    G --> H[Ghi Log biến động - Stock Movement]
+    H --> I((Hoàn tất nhập kho))
+    
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style I fill:#00ff00,stroke:#333,stroke-width:2px
+```
+
+### 2. Quy trình Bán hàng & Logic FIFO (Sales & FIFO Flow)
+Hệ thống tự động ưu tiên xuất các lô hàng nhập trước để tối ưu dòng vốn và hạn sử dụng.
+
+```mermaid
+graph TD
+    Start[🛒 Khách hàng mua hàng] --> Invoice(Tạo Hóa đơn - Sales Invoice)
+    Invoice --> Check{Kiểm tra tồn kho?}
+    Check -->|Hết hàng| OutOfStock[Thông báo & Gợi ý nhập hàng]
+    Check -->|Còn hàng| FIFO[Áp dụng thuật toán FIFO]
+    
+    FIFO --> SelectBatch[Tìm Lô hàng cũ nhất còn tồn]
+    SelectBatch --> Deduct[Trừ số lượng tại Lô hàng đó]
+    Deduct --> IMEISold[Cập nhật trạng thái IMEI: SOLD]
+    IMEISold --> Log[Ghi Log Stock Movement]
+    Log --> End((Xuất hóa đơn & Giao hàng))
+
+    style Start fill:#f9f,stroke:#333,stroke-width:2px
+    style End fill:#00ff00,stroke:#333,stroke-width:2px
+```
+
+### 3. Quy trình Dịch vụ Sửa chữa (Repair & Replacement Flow)
+Quy trình đặc thù kết hợp giữa dịch vụ kỹ thuật và quản lý linh kiện.
+
+```mermaid
+graph TD
+    Rec[🛠️ Tiếp nhận thiết bị] --> Type{Loại dịch vụ?}
+    
+    Type -->|Sửa chữa - Repair| Service[Tính phí dịch vụ/nhân công]
+    
+    Type -->|Thay thế - Replacement| StockCheck{Chọn linh kiện & Check kho}
+    StockCheck -->|Còn hàng| FIFORep[Áp dụng FIFO trừ linh kiện]
+    StockCheck -->|Hết hàng| Order[Yêu cầu nhập linh kiện mới]
+    
+    Service --> Finish[Hoàn tất sửa chữa]
+    FIFORep --> Finish
+    
+    Finish --> Payment[Thanh toán & Xuất hóa đơn]
+    Payment --> Movement[Ghi nhận biến động kho linh kiện]
+    
+    style Rec fill:#f9f,stroke:#333,stroke-width:2px
+    style Payment fill:#0066ff,stroke:#fff,stroke-width:2px
+```
 
 ---
 
@@ -42,28 +108,22 @@ Hệ thống Quản lý Kho (Warehouse Management System - WMS) chuyên dụng c
 - Mỗi lần nhập sẽ tạo ra một **Lô hàng (Stock Batch)** riêng biệt.
 - Hỗ trợ lưu mã IMEI cho từng máy khi nhập vào.
 
-### **4. Quản lý Bán hàng (Sales)**
-- Tạo hóa đơn bán lẻ/đối tác.
-- **Logic FIFO:** Hệ thống tự động tìm các lô hàng cũ nhất còn tồn để trừ số lượng.
-- Tự động cập nhật trạng thái IMEI sang `SOLD`.
-
-### **5. Quản lý Tồn kho & Lịch sử**
-- **Tồn kho:** Xem tổng cộng số lượng đã nhập và hiện còn lại của mỗi sản phẩm.
-- **Lịch sử kho:** Truy xuất mọi biến động (Nhập, Xuất, Điều chỉnh) có kèm mã tham chiếu phiếu nhập/hóa đơn.
-- **IMEI:** Quản lý trạng thái từng mã máy (Trong kho, Đã bán, Trả hàng, Bảo hành).
+### **4. Quản lý Sửa chữa (Repairs)**
+- Quản lý ticket sửa chữa, trạng thái (Chờ sửa, Đang sửa, Hoàn tất).
+- Tích hợp trừ kho tự động khi thay thế linh kiện sản phẩm.
 
 ---
 
 ## 🗃️ Cấu trúc Cơ sở dữ liệu (Database Schema)
 
-Hệ thống sử dụng mô hình quan hệ chuẩn:
-- `products`: Thông tin sản phẩm.
+- `products`: Thông tin sản phẩm & linh kiện.
 - `suppliers`: Nhà cung cấp.
 - `import_receipts` & `import_receipt_items`: Phiếu nhập và chi tiết lô hàng.
 - `stocks`: Theo dõi số lượng còn lại của từng lô nhập (Trái tim của FIFO).
-- `sales_invoices` & `sales_invoice_items`: Hóa đơn và chi tiết xuất kho.
-- `stock_movements`: Nhật ký biến động kho.
-- `product_imeis`: Quản lý định danh duy nhất cho thiết bị di động.
+- `sales_invoices`: Hóa đơn bán lẻ.
+- `repairs` & `repair_services`: Quản lý dịch vụ sửa chữa và thay thế.
+- `stock_movements`: Nhật ký biến động kho tập trung.
+- `product_imeis`: Quản lý định danh duy nhất (IMEI/Serial).
 
 ---
 
@@ -71,7 +131,7 @@ Hệ thống sử dụng mô hình quan hệ chuẩn:
 
 ### **Bước 1: Cấu hình Backend**
 1. Vào thư mục `backend/`.
-2. Tạo file `.env` (nếu chưa có) và cấu hình SQL Server:
+2. Tạo file `.env` và cấu hình SQL Server:
    ```env
    DB_HOST=localhost
    DB_PORT=1433
@@ -80,20 +140,11 @@ Hệ thống sử dụng mô hình quan hệ chuẩn:
    DB_DATABASE=PhoneShopDB
    PORT=3000
    ```
-3. Chạy lệnh: `npm install` và `npm run start:dev`.
+3. Chạy: `npm install` và `npm run start:dev`.
 
 ### **Bước 2: Cấu hình Frontend**
 1. Vào thư mục `frontend/`.
-2. Chạy lệnh: `npm install`.
-3. Khởi động giao diện: `npm run dev`.
+2. Chạy: `npm install`.
+3. Khởi động: `npm run dev`.
 
----
 
-## ✨ Điểm nổi bật về Thiết kế (UX/UI)
-- **Giao diện Dark Mode:** Mang lại cảm giác cao cấp, chuyên nghiệp.
-- **Hiệu ứng Glassmorphism:** Sử dụng hiệu ứng kính mờ cho các Modal và Sidebar.
-- **Smooth Transitions:** Các trạng thái Hover, Loading được tối ưu mượt mà.
-- **Tương tác thông minh:** Tự động tính tổng tiền, tự động gợi ý giá bán khi tạo hóa đơn.
-
----
-*Phát triển bởi Antigravity AI Assistant - 2026*

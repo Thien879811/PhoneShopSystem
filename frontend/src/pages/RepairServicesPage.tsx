@@ -116,6 +116,7 @@ export const RepairServicesPage: React.FC = () => {
                       {item.productId ? (
                         <div className="cell-multi">
                            <span className="primary-text">{products.find(p => p.id === item.productId)?.name || 'Sản phẩm ID: '+item.productId}</span>
+                           <br />
                            <span className="secondary-text">Code: {products.find(p => p.id === item.productId)?.code || '—'}</span>
                         </div>
                       ) : '—'}
