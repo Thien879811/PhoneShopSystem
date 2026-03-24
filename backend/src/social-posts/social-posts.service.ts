@@ -8,6 +8,8 @@ import { PostPlatform } from './entities/post-platform.entity';
 import { SocialAccount } from './entities/social-account.entity';
 import { CreatePostDto, UpdatePostDto } from './dto/social-post.dto';
 import axios from 'axios';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class SocialPostsService {
@@ -126,6 +128,20 @@ export class SocialPostsService {
 
     // Update images
     if (dto.images !== undefined) {
+      // Get current images to delete files
+      const currentImages = await this.imageRepo.find({ where: { postId: id } });
+      const newImages = dto.images || [];
+
+      // Find images to delete (not present in the new list)
+      for (const img of currentImages) {
+        if (!newImages.includes(img.imageUrl)) {
+          const filePath = path.join(process.cwd(), img.imageUrl);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        }
+      }
+
       await this.imageRepo.delete({ postId: id });
       if (dto.images.length > 0) {
         const images = dto.images.map((url) => {
@@ -157,6 +173,19 @@ export class SocialPostsService {
   }
 
   async remove(id: number) {
+    // Get current images to delete physical files
+    const images = await this.imageRepo.find({ where: { postId: id } });
+    for (const img of images) {
+      const filePath = path.join(process.cwd(), img.imageUrl);
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      } catch (err) {
+        this.logger.error(`Failed to delete file ${filePath}: ${err.message}`);
+      }
+    }
+
     // Delete related records first
     await this.imageRepo.delete({ postId: id });
     await this.platformRepo.delete({ postId: id });
