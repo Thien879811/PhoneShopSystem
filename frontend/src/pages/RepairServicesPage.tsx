@@ -44,7 +44,7 @@ export const RepairServicesPage: React.FC = () => {
 
     try {
       if (editingId) {
-        // await repairsApi.updateService(editingId, form); 
+        await repairsApi.updateService(editingId, form); 
       } else {
         await repairsApi.createService(form);
       }
@@ -53,6 +53,27 @@ export const RepairServicesPage: React.FC = () => {
       setForm({ name: '', serviceType: 'REPAIR', defaultPrice: 0, productId: undefined, description: '', status: 'ACTIVE' });
       loadData();
     } catch (err) { alert('Lỗi lưu dịch vụ'); }
+  };
+
+  const handleEdit = (item: RepairService) => {
+    setEditingId(item.id);
+    setForm({
+      name: item.name,
+      serviceType: item.serviceType,
+      defaultPrice: item.defaultPrice,
+      productId: item.productId,
+      description: item.description || '',
+      status: item.status
+    });
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa dịch vụ này?')) return;
+    try {
+      await repairsApi.deleteService(id);
+      loadData();
+    } catch (err) { alert('Không thể xóa dịch vụ này (có thể đã được sử dụng)'); }
   };
 
   const filteredData = data.filter(d => 
@@ -129,7 +150,12 @@ export const RepairServicesPage: React.FC = () => {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                         <button className="btn btn-ghost btn-icon" title="Sửa"><Edit2 size={14}/></button>
+                         <button className="btn btn-ghost btn-icon" title="Sửa" onClick={() => handleEdit(item)}>
+                           <Edit2 size={14} color="var(--primary)"/>
+                         </button>
+                         <button className="btn btn-ghost btn-icon" title="Xóa" onClick={() => handleDelete(item.id)}>
+                           <Trash2 size={14} color="var(--danger)"/>
+                         </button>
                       </div>
                     </td>
                   </tr>

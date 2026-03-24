@@ -387,4 +387,17 @@ export class RepairsService {
     const service = this.serviceRepo.create(dto);
     return this.serviceRepo.save(service);
   }
+
+  async updateService(id: number, dto: any) {
+    const service = await this.serviceRepo.findOne({ where: { id } });
+    if (!service) throw new NotFoundException('Service definition not found');
+    Object.assign(service, dto);
+    return this.serviceRepo.save(service);
+  }
+
+  async deleteService(id: number) {
+    const service = await this.serviceRepo.findOne({ where: { id } });
+    if (!service) throw new NotFoundException('Service definition not found');
+    return this.serviceRepo.remove(service);
+  }
 }

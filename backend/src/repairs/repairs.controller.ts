@@ -20,6 +20,16 @@ export class RepairsController {
     return this.repairsService.createService(dto);
   }
 
+  @Put('services/:id')
+  async updateService(@Param('id') id: string, @Body() dto: any) {
+    return this.repairsService.updateService(+id, dto);
+  }
+
+  @Delete('services/:id')
+  async deleteService(@Param('id') id: string) {
+    return this.repairsService.deleteService(+id);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.repairsService.findOne(+id);

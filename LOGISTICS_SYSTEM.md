@@ -90,6 +90,23 @@ graph TD
     style Payment fill:#0066ff,stroke:#fff,stroke-width:2px
 ```
 
+### 4. Quản lý Danh mục Dịch vụ (Service Management Flow) - Mới
+Dành cho người quản trị để thiết lập bảng giá dịch vụ và linh kiện.
+
+```mermaid
+graph LR
+    A[Quản trị viên] --> B{Thao tác?}
+    B -->|Tạo mới| C[Nhập Tên, Loại, Giá mặc định]
+    B -->|Chỉnh sửa| D[Cập nhật Giá/Tên dịch vụ]
+    B -->|Xóa dịch vụ| E[Xác nhận trạng thái & Xóa]
+    
+    C --> F[Lưu DB: repair_services]
+    D --> F
+    E --> G[Kiểm tra ràng buộc & Xóa]
+    
+    style A fill:#f66,stroke:#333,stroke-width:2px
+```
+
 ---
 
 ## 📦 Các Phân hệ Chức năng
@@ -108,9 +125,10 @@ graph TD
 - Mỗi lần nhập sẽ tạo ra một **Lô hàng (Stock Batch)** riêng biệt.
 - Hỗ trợ lưu mã IMEI cho từng máy khi nhập vào.
 
-### **4. Quản lý Sửa chữa (Repairs)**
-- Quản lý ticket sửa chữa, trạng thái (Chờ sửa, Đang sửa, Hoàn tất).
-- Tích hợp trừ kho tự động khi thay thế linh kiện sản phẩm.
+### **4. Quản lý Sửa chữa & Dịch vụ (Repairs & Services)**
+- **Ticket sửa chữa:** Quản lý quy trình tiếp nhận, theo dõi linh kiện.
+- **Danh mục dịch vụ:** Thêm/Sửa/Xóa các dịch vụ định sẵn (thay pin, thay màn hình...).
+- **Tích hợp kho:** Tự động trừ kho linh kiện khi sử dụng dịch vụ loại `REPLACEMENT`.
 
 ---
 

@@ -262,6 +262,8 @@ export const repairsApi = {
   // Standard Services
   getAllServices: async () => (await api.get('/repair-orders/services')).data,
   createService: async (data: any) => (await api.post('/repair-orders/services', data)).data,
+  updateService: async (id: number, data: any) => (await api.put(`/repair-orders/services/${id}`, data)).data,
+  deleteService: async (id: number) => (await api.delete(`/repair-orders/services/${id}`)).data,
 };
 
 export default api;
