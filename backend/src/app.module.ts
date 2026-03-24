@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -24,12 +25,17 @@ import { SalesModule } from './sales/sales.module';
 import { CategoriesModule } from './categories/categories.module';
 import { BrandsModule } from './brands/brands.module';
 import { RepairsModule } from './repairs/repairs.module';
+import { SocialPostsModule } from './social-posts/social-posts.module';
 
 // Entities for TypeORM (needed inside forRoot if using sync and want them grouped here)
 import { RepairOrder } from './repairs/entities/repair-order.entity';
 import { RepairService } from './repairs/entities/repair-service.entity';
 import { RepairOrderItem } from './repairs/entities/repair-order-item.entity';
 import { RepairStatusLog } from './repairs/entities/repair-status-log.entity';
+import { SocialAccount } from './social-posts/entities/social-account.entity';
+import { SocialPost } from './social-posts/entities/social-post.entity';
+import { PostImage } from './social-posts/entities/post-image.entity';
+import { PostPlatform } from './social-posts/entities/post-platform.entity';
 
 @Module({
   imports: [
@@ -37,6 +43,7 @@ import { RepairStatusLog } from './repairs/entities/repair-status-log.entity';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -63,6 +70,10 @@ import { RepairStatusLog } from './repairs/entities/repair-status-log.entity';
           RepairService,
           RepairOrderItem,
           RepairStatusLog,
+          SocialAccount,
+          SocialPost,
+          PostImage,
+          PostPlatform,
         ],
         synchronize: true,
         options: {
@@ -83,6 +94,7 @@ import { RepairStatusLog } from './repairs/entities/repair-status-log.entity';
     CategoriesModule,
     BrandsModule,
     RepairsModule,
+    SocialPostsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

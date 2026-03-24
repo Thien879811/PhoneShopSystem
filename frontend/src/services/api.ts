@@ -266,4 +266,75 @@ export const repairsApi = {
   deleteService: async (id: number) => (await api.delete(`/repair-orders/services/${id}`)).data,
 };
 
+// ─── SOCIAL ACCOUNTS ─────────────────────────
+export interface SocialAccount {
+  id: number;
+  platform: string;
+  pageName: string;
+  pageId: string;
+  accessToken: string;
+  apiUrl: string;
+  status: string;
+  createdAt: string;
+}
+
+export const socialAccountsApi = {
+  getAll: async () => (await api.get('/social-accounts')).data,
+  getById: async (id: number) => (await api.get(`/social-accounts/${id}`)).data,
+  create: async (data: Partial<SocialAccount>) => (await api.post('/social-accounts', data)).data,
+  update: async (id: number, data: Partial<SocialAccount>) => (await api.put(`/social-accounts/${id}`, data)).data,
+  delete: async (id: number) => (await api.delete(`/social-accounts/${id}`)).data,
+  testConnection: async (id: number) => (await api.post(`/social-accounts/${id}/test-connection`)).data,
+};
+
+// ─── SOCIAL POSTS ────────────────────────────
+export interface PostImage {
+  id: number;
+  postId: number;
+  imageUrl: string;
+}
+
+export interface PostPlatformStatus {
+  id: number;
+  postId: number;
+  accountId: number;
+  status: string;
+  response: string;
+  postedAt: string;
+  account: SocialAccount;
+}
+
+export interface SocialPostItem {
+  id: number;
+  title: string;
+  content: string;
+  status: string;
+  scheduledTime: string;
+  createdAt: string;
+  images: PostImage[];
+  platforms: PostPlatformStatus[];
+}
+
+export const socialPostsApi = {
+  getAll: async (params: any = {}) => {
+    const res = await api.get('/social-posts', { params });
+    return res.data;
+  },
+  getById: async (id: number) => (await api.get(`/social-posts/${id}`)).data,
+  create: async (data: any) => (await api.post('/social-posts', data)).data,
+  update: async (id: number, data: any) => (await api.put(`/social-posts/${id}`, data)).data,
+  delete: async (id: number) => (await api.delete(`/social-posts/${id}`)).data,
+  publish: async (id: number) => (await api.post(`/social-posts/${id}/publish`)).data,
+  retry: async (id: number) => (await api.post(`/social-posts/${id}/retry`)).data,
+  schedule: async (id: number, scheduledTime: string) =>
+    (await api.post(`/social-posts/${id}/schedule`, { scheduledTime })).data,
+  uploadImages: async (files: File[]) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('images', file));
+    return (await api.post('/social-posts/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })).data;
+  },
+};
+
 export default api;

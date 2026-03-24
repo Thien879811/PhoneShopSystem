@@ -13,6 +13,8 @@ import {
   Apple,
   Wrench,
   ShieldCheck,
+  Globe,
+  Send,
 } from 'lucide-react';
 
 const navItems = [
@@ -51,6 +53,13 @@ const navItems = [
     section: 'Bán hàng',
     items: [
       { to: '/sales', label: 'Hóa đơn bán', icon: ShoppingCart },
+    ],
+  },
+  {
+    section: 'Marketing',
+    items: [
+      { to: '/social-accounts', label: 'Tài khoản MXH', icon: Globe },
+      { to: '/social-posts', label: 'Đăng bài tự động', icon: Send },
     ],
   },
 ];

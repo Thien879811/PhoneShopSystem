@@ -12,6 +12,8 @@ import CategoriesPage from './pages/CategoriesPage';
 import BrandsPage from './pages/BrandsPage';
 import RepairsPage from './pages/RepairsPage';
 import RepairServicesPage from './pages/RepairServicesPage';
+import SocialAccountsPage from './pages/SocialAccountsPage';
+import SocialPostsPage from './pages/SocialPostsPage';
 
 const App: React.FC = () => {
   return (
@@ -31,6 +33,8 @@ const App: React.FC = () => {
           <Route path="/movements" element={<MovementsPage />} />
           <Route path="/sales" element={<SalesPage />} />
           <Route path="/imei" element={<ImeiPage />} />
+          <Route path="/social-accounts" element={<SocialAccountsPage />} />
+          <Route path="/social-posts" element={<SocialPostsPage />} />
         </Routes>
       </Layout>
     </Router>

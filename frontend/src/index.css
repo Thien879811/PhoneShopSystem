@@ -1243,3 +1243,35 @@ table.data-table tbody td .cell-sub {
 .price.highlight {
   color: var(--success);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   SOCIAL POSTING MODULE
+   ═══════════════════════════════════════════════════════════════ */
+input[type="datetime-local"].form-input {
+  color-scheme: dark;
+}
+
+input[type="datetime-local"].form-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+  cursor: pointer;
+}
+
+/* Platform tag animations */
+.badge {
+  transition: all 0.2s ease;
+}
+
+code {
+  padding: 2px 6px;
+  background: var(--bg-input);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Preview modal content styles */
+pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
