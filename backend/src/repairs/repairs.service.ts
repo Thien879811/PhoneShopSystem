@@ -358,7 +358,6 @@ export class RepairsService {
   // --- Helper Methods ---
   private async addLog(repairOrderId: number, status: RepairStatus, note: string) {
     const repairOrder = await this.findOne(repairOrderId);
-    console.log("repairOrder", repairOrder);
     const log = this.logRepo.create({
       id: repairOrderId,
       repairOrder: repairOrder,
@@ -369,8 +368,9 @@ export class RepairsService {
   }
 
   private async addLog_with_manager(manager: any, repairOrderId: number, status: RepairStatus, note: string) {
+    const repairOrder = await manager.findOne(RepairOrder, { where: { id: repairOrderId } });
     const log = manager.create(RepairStatusLog, {
-      repairOrderId: repairOrderId,
+      repairOrder: repairOrder,
       status,
       note,
     });
