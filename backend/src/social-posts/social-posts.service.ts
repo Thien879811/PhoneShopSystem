@@ -78,6 +78,8 @@ export class SocialPostsService {
     post.title = dto.title;
     post.content = dto.content;
     post.scheduledTime = dto.scheduledTime ? new Date(dto.scheduledTime) : null;
+    post.isRepeated = dto.isRepeated || false;
+    post.repeatInterval = dto.repeatInterval || 0;
     post.status = dto.scheduledTime ? PostStatus.SCHEDULED : PostStatus.DRAFT;
 
     const savedPost = await this.postRepo.save(post);
@@ -117,6 +119,8 @@ export class SocialPostsService {
       post.scheduledTime = dto.scheduledTime ? new Date(dto.scheduledTime) : null;
     }
     if (dto.status !== undefined) post.status = dto.status as PostStatus;
+    if (dto.isRepeated !== undefined) post.isRepeated = dto.isRepeated;
+    if (dto.repeatInterval !== undefined) post.repeatInterval = dto.repeatInterval;
 
     await this.postRepo.save(post);
 
@@ -192,6 +196,21 @@ export class SocialPostsService {
     return this.publishPost(post);
   }
 
+  // Repost logic
+  async repost(id: number) {
+    const post = await this.findOne(id);
+    
+    // Reset all platforms to PENDING
+    for (const platform of post.platforms) {
+      platform.status = 'PENDING';
+      await this.platformRepo.save(platform);
+    }
+    
+    post.status = PostStatus.POSTING;
+    await this.postRepo.save(post);
+    return this.publishPost(post);
+  }
+
   // Cron job: check every minute for scheduled posts
   @Cron(CronExpression.EVERY_MINUTE)
   async handleScheduledPosts() {
@@ -254,11 +273,30 @@ export class SocialPostsService {
     }
 
     // Update overall post status
-    post.status = allSuccess
+    const finalStatus = allSuccess
       ? PostStatus.POSTED
       : anySuccess
         ? PostStatus.POSTED
         : PostStatus.FAILED;
+
+    if (finalStatus === PostStatus.POSTED && post.isRepeated && post.repeatInterval > 0) {
+      // Logic for repetition: schedule the next post
+      const nextDate = new Date();
+      nextDate.setDate(nextDate.getDate() + post.repeatInterval);
+      
+      post.scheduledTime = nextDate;
+      post.status = PostStatus.SCHEDULED;
+      
+      // Reset statuses for platforms for the next run
+      for (const platform of post.platforms) {
+        platform.status = 'PENDING';
+        platform.postedAt = null;
+        await this.platformRepo.save(platform);
+      }
+    } else {
+      post.status = finalStatus;
+    }
+    
     await this.postRepo.save(post);
 
     return this.findOne(post.id);

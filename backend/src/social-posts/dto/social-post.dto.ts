@@ -4,6 +4,8 @@ export class CreatePostDto {
   scheduledTime?: string;
   platformIds?: number[];
   images?: string[];
+  isRepeated?: boolean;
+  repeatInterval?: number;
 }
 
 export class UpdatePostDto {
@@ -13,4 +15,6 @@ export class UpdatePostDto {
   status?: string;
   platformIds?: number[];
   images?: string[];
+  isRepeated?: boolean;
+  repeatInterval?: number;
 }

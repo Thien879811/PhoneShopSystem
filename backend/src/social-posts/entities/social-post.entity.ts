@@ -25,6 +25,12 @@ export class SocialPost {
   @Column({ name: 'scheduled_time', type: 'datetime', nullable: true })
   scheduledTime: Date | null;
 
+  @Column({ name: 'is_repeated', type: 'bit', default: 0 })
+  isRepeated: boolean;
+
+  @Column({ name: 'repeat_interval', type: 'int', default: 0 })
+  repeatInterval: number;
+
   @CreateDateColumn({ name: 'created_at', type: 'datetime' })
   createdAt: Date;
 

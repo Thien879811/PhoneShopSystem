@@ -54,6 +54,11 @@ export class SocialPostsController {
     return this.postsService.retryPost(+id);
   }
 
+  @Post(':id/repost')
+  repost(@Param('id') id: string) {
+    return this.postsService.repost(+id);
+  }
+
   @Post(':id/schedule')
   schedulePost(@Param('id') id: string, @Body('scheduledTime') scheduledTime: string) {
     return this.postsService.schedulePost(+id, scheduledTime);

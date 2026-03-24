@@ -14,6 +14,8 @@ Hệ thống Quản lý Kho (Warehouse Management System - WMS) chuyên dụng c
   - Quản lý giao dịch (Transactions) đảm bảo tính toàn vẹn dữ liệu.
   - Logic trừ kho theo nguyên tắc **FIFO** (First In - First Out).
   - Tự động ghi log lịch sử biến động kho (`stock_movements`).
+  - **Marketing Automation:** Tích hợp Facebook Graph API & Zalo OA API.
+  - **Scheduler:** NestJS `@Cron` tự động đăng bài theo lịch.
 
 ### **Frontend: React + Vite**
 - **UI Framework:** Vanilla CSS (Premium Dark Theme) + Tailwind-inspired utilities.
@@ -23,6 +25,7 @@ Hệ thống Quản lý Kho (Warehouse Management System - WMS) chuyên dụng c
   - Quản lý danh mục sản phẩm, nhà cung cấp & dịch vụ sửa chữa.
   - Form nhập hàng/bán hàng linh hoạt.
   - Theo dõi tồn kho tổng hợp và lịch sử chi tiết.
+  - **Marketing:** Quản lý bài đăng & tài khoản mạng xã hội.
 
 ---
 
@@ -107,6 +110,28 @@ graph LR
     style A fill:#f66,stroke:#333,stroke-width:2px
 ```
 
+### 5. Quy trình Đăng bài Tự động (Social Auto-Posting Flow) - Mới
+Hệ thống cho phép soạn thảo nội dung, upload hình ảnh và lên lịch đăng bài truyền thông.
+
+```mermaid
+graph TD
+    A[📝 Soạn bài đăng] --> B{Đăng ngay?}
+    B -->|Có| C[Gọi API Facebook/Zalo]
+    B -->|Không| D[Lên lịch - Scheduled]
+    D --> E[Cron Job kiểm tra mỗi phút]
+    E -->|Đến giờ| C
+    C --> F{Kết quả?}
+    F -->|Thành công| G[Cập nhật: POSTED]
+    F -->|Thất bại| H[Cập nhật: FAILED & Log lỗi]
+    G -->|Lặp lại?| D
+    H --> I[Nút Thử lại - Retry]
+    I --> C
+    
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style G fill:#00ff00,stroke:#333,stroke-width:2px
+    style H fill:#ff0000,stroke:#fff,stroke-width:2px
+```
+
 ---
 
 ## 📦 Các Phân hệ Chức năng
@@ -130,6 +155,14 @@ graph LR
 - **Danh mục dịch vụ:** Thêm/Sửa/Xóa các dịch vụ định sẵn (thay pin, thay màn hình...).
 - **Tích hợp kho:** Tự động trừ kho linh kiện khi sử dụng dịch vụ loại `REPLACEMENT`.
 
+### **5. Marketing & Mạng xã hội (Social Posts) - Mới**
+- **Quản lý tài khoản:** Kết nối Page ID/OA ID, Access Token Facebook & Zalo.
+- **Soạn bài viết:** Nhập nội dung, upload nhiều hình ảnh cùng lúc.
+- **Lên lịch đăng bài:** Chọn ngày giờ đăng tự động.
+- **Tự động lặp lại:** Thiết lập bài đăng sau chu kỳ X ngày.
+- **Đăng lại (Repost):** Cho phép phát hành lại nhanh bài đã đăng.
+- **Theo dõi trạng thái:** Kiểm tra bài đã đăng, bài lỗi và lịch đăng kế tiếp.
+
 ---
 
 ## 🗃️ Cấu trúc Cơ sở dữ liệu (Database Schema)
@@ -142,6 +175,10 @@ graph LR
 - `repairs` & `repair_services`: Quản lý dịch vụ sửa chữa và thay thế.
 - `stock_movements`: Nhật ký biến động kho tập trung.
 - `product_imeis`: Quản lý định danh duy nhất (IMEI/Serial).
+- `social_accounts`: Lưu thông tin kết nối API Facebook/Zalo.
+- `social_posts`: Nội dung, lịch trình và cấu hình lặp lại.
+- `post_images`: Lưu URL hình ảnh bài viết.
+- `post_platforms`: Trạng thái đăng bài chi tiết theo từng nền tảng.
 
 ---
 

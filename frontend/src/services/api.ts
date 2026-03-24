@@ -310,6 +310,8 @@ export interface SocialPostItem {
   content: string;
   status: string;
   scheduledTime: string;
+  isRepeated: boolean;
+  repeatInterval: number;
   createdAt: string;
   images: PostImage[];
   platforms: PostPlatformStatus[];
@@ -326,6 +328,7 @@ export const socialPostsApi = {
   delete: async (id: number) => (await api.delete(`/social-posts/${id}`)).data,
   publish: async (id: number) => (await api.post(`/social-posts/${id}/publish`)).data,
   retry: async (id: number) => (await api.post(`/social-posts/${id}/retry`)).data,
+  repost: async (id: number) => (await api.post(`/social-posts/${id}/repost`)).data,
   schedule: async (id: number, scheduledTime: string) =>
     (await api.post(`/social-posts/${id}/schedule`, { scheduledTime })).data,
   uploadImages: async (files: File[]) => {

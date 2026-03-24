@@ -20,6 +20,8 @@ import {
   MessageCircle,
   Globe,
   AlertTriangle,
+  RotateCcw,
+  Repeat,
 } from 'lucide-react';
 import {
   socialPostsApi,
@@ -55,6 +57,8 @@ const SocialPostsPage: React.FC = () => {
     scheduledTime: '',
     platformIds: [] as number[],
     images: [] as string[],
+    isRepeated: false,
+    repeatInterval: 1,
   });
   const [uploadingImages, setUploadingImages] = useState(false);
 
@@ -115,6 +119,8 @@ const SocialPostsPage: React.FC = () => {
       scheduledTime: post.scheduledTime ? new Date(post.scheduledTime).toISOString().slice(0, 16) : '',
       platformIds: post.platforms?.map((p) => p.accountId) || [],
       images: post.images?.map((img) => img.imageUrl) || [],
+      isRepeated: post.isRepeated || false,
+      repeatInterval: post.repeatInterval || 1,
     });
     setShowModal(true);
   };
@@ -148,6 +154,19 @@ const SocialPostsPage: React.FC = () => {
       loadPosts();
     } catch (err) {
       console.error('Failed to retry:', err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRepost = async (id: number) => {
+    if (!confirm('Bạn có muốn đăng lại bài viết này ngay bây giờ?')) return;
+    setActionLoading(id);
+    try {
+      await socialPostsApi.repost(id);
+      loadPosts();
+    } catch (err) {
+      console.error('Failed to repost:', err);
     } finally {
       setActionLoading(null);
     }
@@ -189,7 +208,7 @@ const SocialPostsPage: React.FC = () => {
 
   const resetForm = () => {
     setEditId(null);
-    setForm({ title: '', content: '', scheduledTime: '', platformIds: [], images: [] });
+    setForm({ title: '', content: '', scheduledTime: '', platformIds: [], images: [], isRepeated: false, repeatInterval: 1 });
   };
 
   const openCreate = () => {
@@ -330,6 +349,13 @@ const SocialPostsPage: React.FC = () => {
                       <span className={`badge ${statusInfo.badge}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                         {statusInfo.icon} {statusInfo.label}
                       </span>
+                      {post.isRepeated && (
+                        <div style={{ marginTop: '4px' }}>
+                          <span className="badge badge-info" style={{ fontSize: '10px', gap: '3px' }}>
+                            <Repeat size={10} /> Lặp lại {post.repeatInterval} ngày
+                          </span>
+                        </div>
+                      )}
                     </td>
                     <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                       {post.scheduledTime
@@ -399,6 +425,17 @@ const SocialPostsPage: React.FC = () => {
                             disabled={actionLoading === post.id}
                           >
                             {actionLoading === post.id ? <Loader2 size={15} className="animate-pulse" /> : <RefreshCw size={15} />}
+                          </button>
+                        )}
+                        {post.status === 'POSTED' && (
+                          <button
+                            className="btn btn-ghost btn-icon"
+                            title="Đăng lại"
+                            style={{ color: 'var(--blue)' }}
+                            onClick={() => handleRepost(post.id)}
+                            disabled={actionLoading === post.id}
+                          >
+                            {actionLoading === post.id ? <Loader2 size={15} className="animate-pulse" /> : <RotateCcw size={15} />}
                           </button>
                         )}
                         <button
@@ -730,6 +767,40 @@ const SocialPostsPage: React.FC = () => {
                     </button>
                   )}
                 </div>
+              </div>
+
+              {/* Repeat Settings */}
+              <div className="form-group" style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: form.isRepeated ? '12px' : '0' }}>
+                  <input
+                    type="checkbox"
+                    checked={form.isRepeated}
+                    onChange={(e) => setForm({ ...form, isRepeated: e.target.checked })}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Repeat size={16} />
+                    <span style={{ fontWeight: 600 }}>Tự động lặp lại bài đăng này</span>
+                  </div>
+                </label>
+                
+                {form.isRepeated && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '28px', animation: 'fadeIn 0.2s ease' }}>
+                    <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Lặp lại sau mỗi:</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="number"
+                        min="1"
+                        max="30"
+                        className="form-input"
+                        style={{ width: '70px', textAlign: 'center' }}
+                        value={form.repeatInterval}
+                        onChange={(e) => setForm({ ...form, repeatInterval: parseInt(e.target.value) || 1 })}
+                      />
+                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>ngày</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="modal-footer">
