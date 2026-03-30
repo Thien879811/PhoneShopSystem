@@ -1,17 +1,21 @@
-import axios from 'axios';
+import { supabase } from './supabaseClient';
 
-const api = axios.create({
-  baseURL: 'http://localhost:3000/api',
-});
+// Helper to mimic axios error response for compatibility
+const wrapError = (err: any) => {
+  if (err && err.message) {
+    return { response: { data: { message: err.message } } };
+  }
+  return err;
+};
 
 export interface Product {
-  id: number;
+  id: any;
   code: string;
   name: string;
   category: string;
   brand: string;
-  categoryId?: number;
-  brandId?: number;
+  categoryId?: any;
+  brandId?: any;
   categoryRel?: Category;
   brandRel?: Brand;
   unit: string;
@@ -25,18 +29,71 @@ export interface Product {
 
 export const productsApi = {
   getAll: async (params: any = {}) => {
-    const res = await api.get('/products', { params });
-    return res.data;
+    try {
+      const { page = 1, limit = 15, search = '' } = params;
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
+      let query = supabase
+        .from('products')
+        .select('*, categoryRel:categories(*), brandRel:brands(*)', { count: 'exact' });
+
+      if (search) {
+        query = query.ilike('name', `%${search}%`);
+      }
+
+      const { data, count, error } = await query.range(from, to).order('created_at', { ascending: false });
+      if (error) throw error;
+      return { data: data || [], total: count || 0 };
+    } catch (error) {
+      throw wrapError(error);
+    }
   },
-  getById: async (id: number) => (await api.get(`/products/${id}`)).data,
-  create: async (data: Partial<Product>) => (await api.post('/products', data)).data,
-  update: async (id: number, data: Partial<Product>) => (await api.put(`/products/${id}`, data)).data,
-  delete: async (id: number) => (await api.delete(`/products/${id}`)).data,
+  getById: async (id: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*, categoryRel:categories(*), brandRel:brands(*)')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  create: async (data: Partial<Product>) => {
+    try {
+      const { data: result, error } = await supabase.from('products').insert([data]).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  update: async (id: any, data: Partial<Product>) => {
+    try {
+      const { data: result, error } = await supabase.from('products').update(data).eq('id', id).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  delete: async (id: any) => {
+    try {
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
 };
 
 // ─── SUPPLIERS ────────────────────────────────
 export interface Supplier {
-  id: number;
+  id: any;
   name: string;
   phone: string;
   email: string;
@@ -47,19 +104,66 @@ export interface Supplier {
 
 export const suppliersApi = {
   getAll: async (params: any = {}) => {
-    const res = await api.get('/suppliers', { params });
-    return res.data;
+    try {
+      const { page = 1, limit = 15, search = '' } = params;
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
+      let query = supabase.from('suppliers').select('*', { count: 'exact' });
+
+      if (search) {
+        query = query.ilike('name', `%${search}%`);
+      }
+
+      const { data, count, error } = await query.range(from, to).order('created_at', { ascending: false });
+      if (error) throw error;
+      return { data: data || [], total: count || 0 };
+    } catch (error) {
+      throw wrapError(error);
+    }
   },
-  getById: async (id: number) => (await api.get(`/suppliers/${id}`)).data,
-  create: async (data: Partial<Supplier>) => (await api.post('/suppliers', data)).data,
-  update: async (id: number, data: Partial<Supplier>) => (await api.put(`/suppliers/${id}`, data)).data,
-  delete: async (id: number) => (await api.delete(`/suppliers/${id}`)).data,
+  getById: async (id: any) => {
+    try {
+      const { data, error } = await supabase.from('suppliers').select('*').eq('id', id).single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  create: async (data: Partial<Supplier>) => {
+    try {
+      const { data: result, error } = await supabase.from('suppliers').insert([data]).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  update: async (id: any, data: Partial<Supplier>) => {
+    try {
+      const { data: result, error } = await supabase.from('suppliers').update(data).eq('id', id).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  delete: async (id: any) => {
+    try {
+      const { error } = await supabase.from('suppliers').delete().eq('id', id);
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
 };
 
 // ─── IMPORT RECEIPTS ─────────────────────────
 export interface ImportReceiptItem {
-  id?: number;
-  productId: number;
+  id?: any;
+  productId: any;
   productName?: string;
   quantity: number;
   importPrice: number;
@@ -68,9 +172,9 @@ export interface ImportReceiptItem {
 }
 
 export interface ImportReceipt {
-  id: number;
+  id: any;
   code: string;
-  supplierId: number;
+  supplierId: any;
   supplier?: Supplier;
   importDate: string;
   totalAmount: number;
@@ -82,17 +186,60 @@ export interface ImportReceipt {
 
 export const importsApi = {
   getAll: async (params: any = {}) => {
-    const res = await api.get('/imports', { params });
-    return res.data;
+    try {
+      const { page = 1, limit = 15 } = params;
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
+      const { data, count, error } = await supabase
+        .from('import_receipts')
+        .select('*, supplier:suppliers(*)', { count: 'exact' })
+        .range(from, to)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return { data: data || [], total: count || 0 };
+    } catch (error) {
+      throw wrapError(error);
+    }
   },
-  getById: async (id: number) => (await api.get(`/imports/${id}`)).data,
-  create: async (data: any) => (await api.post('/imports', data)).data,
-  delete: async (id: number) => (await api.delete(`/imports/${id}`)).data,
+  getById: async (id: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('import_receipts')
+        .select('*, supplier:suppliers(*), items:stocks(*)')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  create: async (data: any) => {
+    try {
+      // Maintaining the business flow logic using RPC if available, or manual orchestration
+      const { data: result, error } = await supabase.rpc('create_import_receipt', { data_json: data });
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  delete: async (id: any) => {
+    try {
+      const { error } = await supabase.from('import_receipts').delete().eq('id', id);
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
 };
 
 // ─── STOCKS ──────────────────────────────────
 export interface StockSummary {
-  productId: number;
+  productId: any;
   productCode: string;
   productName: string;
   category: string;
@@ -104,11 +251,11 @@ export interface StockSummary {
 }
 
 export interface StockMovement {
-  id: number;
-  productId: number;
+  id: any;
+  productId: any;
   productName: string;
   referenceType: string;
-  referenceId: number;
+  referenceId: any;
   referenceCode: string;
   quantity: number;
   movementType: string;
@@ -124,27 +271,62 @@ export interface DashboardStats {
 
 export const stocksApi = {
   getSummary: async (params: any = {}) => {
-    const res = await api.get('/stocks/summary', { params });
-    return res.data;
+    try {
+      const { data, error } = await supabase.rpc('get_stock_summary', { params_json: params });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
   },
   getDashboard: async () => {
-    const res = await api.get('/stocks/dashboard');
-    return res.data;
+    try {
+      const { data, error } = await supabase.rpc('get_dashboard_stats');
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
   },
   getMovements: async (params: any = {}) => {
-    const res = await api.get('/stocks/movements', { params });
-    return res.data;
+    try {
+      const { page = 1, limit = 15 } = params;
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
+      const { data, count, error } = await supabase
+        .from('stock_movements')
+        .select('*, product:products(name)', { count: 'exact' })
+        .range(from, to)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      const mapped = data?.map(m => ({ ...m, productName: m.product?.name })) || [];
+      return { data: mapped, total: count || 0 };
+    } catch (error) {
+      throw wrapError(error);
+    }
   },
-  getByProduct: async (productId: number) => {
-    const res = await api.get(`/stocks/product/${productId}`);
-    return res.data;
+  getByProduct: async (productId: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('stocks')
+        .select('*')
+        .eq('product_id', productId)
+        .eq('status', 'AVAILABLE');
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
   },
 };
 
 // ─── SALES ───────────────────────────────────
 export interface SalesInvoiceItem {
-  id?: number;
-  productId: number;
+  id?: any;
+  productId: any;
   productName?: string;
   quantity: number;
   price: number;
@@ -153,7 +335,7 @@ export interface SalesInvoiceItem {
 }
 
 export interface SalesInvoice {
-  id: number;
+  id: any;
   code: string;
   customerName: string;
   customerPhone: string;
@@ -166,17 +348,59 @@ export interface SalesInvoice {
 
 export const salesApi = {
   getAll: async (params: any = {}) => {
-    const res = await api.get('/sales', { params });
-    return res.data;
+    try {
+      const { page = 1, limit = 15 } = params;
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
+      const { data, count, error } = await supabase
+        .from('sales_invoices')
+        .select('*', { count: 'exact' })
+        .range(from, to)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return { data: data || [], total: count || 0 };
+    } catch (error) {
+      throw wrapError(error);
+    }
   },
-  getById: async (id: number) => (await api.get(`/sales/${id}`)).data,
-  create: async (data: any) => (await api.post('/sales', data)).data,
-  delete: async (id: number) => (await api.delete(`/sales/${id}`)).data,
+  getById: async (id: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('sales_invoices')
+        .select('*, items:sales_invoice_items(*)')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  create: async (data: any) => {
+    try {
+      const { data: result, error } = await supabase.rpc('create_sales_invoice', { invoice_json: data });
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  delete: async (id: any) => {
+    try {
+      const { error } = await supabase.from('sales_invoices').delete().eq('id', id);
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
 };
 
 // ─── CATEGORIES ──────────────────────────────
 export interface Category {
-  id: number;
+  id: any;
   name: string;
   prefix: string;
   description: string;
@@ -184,15 +408,47 @@ export interface Category {
 }
 
 export const categoriesApi = {
-  getAll: async () => (await api.get('/categories')).data,
-  create: async (data: Partial<Category>) => (await api.post('/categories', data)).data,
-  update: async (id: number, data: Partial<Category>) => (await api.put(`/categories/${id}`, data)).data,
-  delete: async (id: number) => (await api.delete(`/categories/${id}`)).data,
+  getAll: async () => {
+    try {
+      const { data, error } = await supabase.from('categories').select('*').order('name');
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  create: async (data: Partial<Category>) => {
+    try {
+      const { data: result, error } = await supabase.from('categories').insert([data]).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  update: async (id: any, data: Partial<Category>) => {
+    try {
+      const { data: result, error } = await supabase.from('categories').update(data).eq('id', id).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  delete: async (id: any) => {
+    try {
+      const { error } = await supabase.from('categories').delete().eq('id', id);
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
 };
 
 // ─── BRANDS ──────────────────────────────────
 export interface Brand {
-  id: number;
+  id: any;
   name: string;
   origin: string;
   description: string;
@@ -200,19 +456,51 @@ export interface Brand {
 }
 
 export const brandsApi = {
-  getAll: async () => (await api.get('/brands')).data,
-  create: async (data: Partial<Brand>) => (await api.post('/brands', data)).data,
-  update: async (id: number, data: Partial<Brand>) => (await api.put(`/brands/${id}`, data)).data,
-  delete: async (id: number) => (await api.delete(`/brands/${id}`)).data,
+  getAll: async () => {
+    try {
+      const { data, error } = await supabase.from('brands').select('*').order('name');
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  create: async (data: Partial<Brand>) => {
+    try {
+      const { data: result, error } = await supabase.from('brands').insert([data]).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  update: async (id: any, data: Partial<Brand>) => {
+    try {
+      const { data: result, error } = await supabase.from('brands').update(data).eq('id', id).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  delete: async (id: any) => {
+    try {
+      const { error } = await supabase.from('brands').delete().eq('id', id);
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
 };
 
 // ─── REPAIRS ─────────────────────────────────
 export interface RepairOrderItem {
-  id: number;
-  serviceId: number;
+  id: any;
+  serviceId: any;
   serviceName: string;
   serviceType: 'REPAIR' | 'REPLACEMENT';
-  productId?: number;
+  productId?: any;
   quantity: number;
   price: number;
   total: number;
@@ -220,9 +508,9 @@ export interface RepairOrderItem {
 }
 
 export interface RepairOrder {
-  id: number;
+  id: any;
   code: string;
-  customerId?: number;
+  customerId?: any;
   customerName?: string;
   customerPhone?: string;
   deviceName: string;
@@ -239,36 +527,147 @@ export interface RepairOrder {
 }
 
 export interface RepairService {
-  id: number;
+  id: any;
   name: string;
   serviceType: 'REPAIR' | 'REPLACEMENT';
   defaultPrice: number;
-  productId?: number;
+  productId?: any;
   description?: string;
   status: string;
   createdAt: string;
 }
 
 export const repairsApi = {
-  getAll: async (params: any = {}) => (await api.get('/repair-orders', { params })).data,
-  getById: async (id: number) => (await api.get(`/repair-orders/${id}`)).data,
-  create: async (data: any) => (await api.post('/repair-orders', data)).data,
-  update: async (id: number, data: any) => (await api.put(`/repair-orders/${id}`, data)).data,
-  addService: async (id: number, data: any) => (await api.post(`/repair-orders/${id}/add-service`, data)).data,
-  addItem: async (id: number, item: any) => (await api.post(`/repair-orders/${id}/items`, item)).data, // Keep for backward compat
-  removeItem: async (id: number, itemId: number) => (await api.delete(`/repair-orders/${id}/items/${itemId}`)).data,
-  complete: async (id: number) => (await api.post(`/repair-orders/${id}/complete`)).data,
-  quickImport: async (data: any) => (await api.post('/repair-orders/quick-import', data)).data,
+  getAll: async (params: any = {}) => {
+    try {
+      const { data, error } = await supabase
+        .from('repairs')
+        .select('*, items:repair_items(*)')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  getById: async (id: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('repairs')
+        .select('*, items:repair_items(*)')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  create: async (data: any) => {
+    try {
+      const { data: result, error } = await supabase.from('repairs').insert([data]).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  update: async (id: any, data: any) => {
+    try {
+      const { data: result, error } = await supabase.from('repairs').update(data).eq('id', id).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  addService: async (id: any, data: any) => {
+    try {
+      const { data: result, error } = await supabase.from('repair_items').insert([{ ...data, repair_id: id }]).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  addItem: async (id: any, item: any) => {
+    try {
+      const { data: result, error } = await supabase.from('repair_items').insert([{ ...item, repair_id: id }]).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  removeItem: async (id: any, itemId: any) => {
+    try {
+      const { error } = await supabase.from('repair_items').delete().eq('id', itemId);
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  complete: async (id: any) => {
+    try {
+      const { data, error } = await supabase.from('repairs').update({ status: 'COMPLETED' }).eq('id', id).select().single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  quickImport: async (data: any) => {
+    try {
+      const { data: result, error } = await supabase.rpc('quick_import_repair', { data_json: data });
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
   // Standard Services
-  getAllServices: async () => (await api.get('/repair-orders/services')).data,
-  createService: async (data: any) => (await api.post('/repair-orders/services', data)).data,
-  updateService: async (id: number, data: any) => (await api.put(`/repair-orders/services/${id}`, data)).data,
-  deleteService: async (id: number) => (await api.delete(`/repair-orders/services/${id}`)).data,
+  getAllServices: async () => {
+    try {
+      const { data, error } = await supabase.from('repair_services').select('*').order('name');
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  createService: async (data: any) => {
+    try {
+      const { data: result, error } = await supabase.from('repair_services').insert([data]).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  updateService: async (id: any, data: any) => {
+    try {
+      const { data: result, error } = await supabase.from('repair_services').update(data).eq('id', id).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  deleteService: async (id: any) => {
+    try {
+      const { error } = await supabase.from('repair_services').delete().eq('id', id);
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
 };
 
 // ─── SOCIAL ACCOUNTS ─────────────────────────
 export interface SocialAccount {
-  id: number;
+  id: any;
   platform: string;
   pageName: string;
   pageId: string;
@@ -279,25 +678,73 @@ export interface SocialAccount {
 }
 
 export const socialAccountsApi = {
-  getAll: async () => (await api.get('/social-accounts')).data,
-  getById: async (id: number) => (await api.get(`/social-accounts/${id}`)).data,
-  create: async (data: Partial<SocialAccount>) => (await api.post('/social-accounts', data)).data,
-  update: async (id: number, data: Partial<SocialAccount>) => (await api.put(`/social-accounts/${id}`, data)).data,
-  delete: async (id: number) => (await api.delete(`/social-accounts/${id}`)).data,
-  testConnection: async (id: number) => (await api.post(`/social-accounts/${id}/test-connection`)).data,
+  getAll: async () => {
+    try {
+      const { data, error } = await supabase.from('social_accounts').select('*');
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  getById: async (id: any) => {
+    try {
+      const { data, error } = await supabase.from('social_accounts').select('*').eq('id', id).single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  create: async (data: Partial<SocialAccount>) => {
+    try {
+      const { data: result, error } = await supabase.from('social_accounts').insert([data]).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  update: async (id: any, data: Partial<SocialAccount>) => {
+    try {
+      const { data: result, error } = await supabase.from('social_accounts').update(data).eq('id', id).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  delete: async (id: any) => {
+    try {
+      const { error } = await supabase.from('social_accounts').delete().eq('id', id);
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  testConnection: async (id: any) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('test-social-connection', { body: { id } });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
 };
 
 // ─── SOCIAL POSTS ────────────────────────────
 export interface PostImage {
-  id: number;
-  postId: number;
+  id: any;
+  postId: any;
   imageUrl: string;
 }
 
 export interface PostPlatformStatus {
-  id: number;
-  postId: number;
-  accountId: number;
+  id: any;
+  postId: any;
+  accountId: any;
   status: string;
   response: string;
   postedAt: string;
@@ -305,7 +752,7 @@ export interface PostPlatformStatus {
 }
 
 export interface SocialPostItem {
-  id: number;
+  id: any;
   title: string;
   content: string;
   status: string;
@@ -319,25 +766,107 @@ export interface SocialPostItem {
 
 export const socialPostsApi = {
   getAll: async (params: any = {}) => {
-    const res = await api.get('/social-posts', { params });
-    return res.data;
+    try {
+      const { data, error } = await supabase
+        .from('social_posts')
+        .select('*, images:post_images(*), platforms:post_platform_status(*, account:social_accounts(*))')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      throw wrapError(error);
+    }
   },
-  getById: async (id: number) => (await api.get(`/social-posts/${id}`)).data,
-  create: async (data: any) => (await api.post('/social-posts', data)).data,
-  update: async (id: number, data: any) => (await api.put(`/social-posts/${id}`, data)).data,
-  delete: async (id: number) => (await api.delete(`/social-posts/${id}`)).data,
-  publish: async (id: number) => (await api.post(`/social-posts/${id}/publish`)).data,
-  retry: async (id: number) => (await api.post(`/social-posts/${id}/retry`)).data,
-  repost: async (id: number) => (await api.post(`/social-posts/${id}/repost`)).data,
-  schedule: async (id: number, scheduledTime: string) =>
-    (await api.post(`/social-posts/${id}/schedule`, { scheduledTime })).data,
+  getById: async (id: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('social_posts')
+        .select('*, images:post_images(*), platforms:post_platform_status(*, account:social_accounts(*))')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  create: async (data: any) => {
+    try {
+      const { data: result, error } = await supabase.rpc('create_social_post', { post_json: data });
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  update: async (id: any, data: any) => {
+    try {
+      const { data: result, error } = await supabase.from('social_posts').update(data).eq('id', id).select().single();
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  delete: async (id: any) => {
+    try {
+      const { error } = await supabase.from('social_posts').delete().eq('id', id);
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  publish: async (id: any) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('publish-post', { body: { id } });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  retry: async (id: any) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('retry-post', { body: { id } });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  repost: async (id: any) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('repost', { body: { id } });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
+  schedule: async (id: any, scheduledTime: string) => {
+    try {
+      const { data, error } = await supabase.from('social_posts').update({ scheduledTime, status: 'SCHEDULED' }).eq('id', id).select().single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw wrapError(error);
+    }
+  },
   uploadImages: async (files: File[]) => {
-    const formData = new FormData();
-    files.forEach((file) => formData.append('images', file));
-    return (await api.post('/social-posts/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })).data;
+    try {
+      const uploadPromises = files.map(async (file) => {
+        const fileName = `${Date.now()}_${file.name}`;
+        const { data, error } = await supabase.storage.from('post-images').upload(fileName, file);
+        if (error) throw error;
+        const { data: urlData } = supabase.storage.from('post-images').getPublicUrl(data.path);
+        return { imageUrl: urlData.publicUrl };
+      });
+      return Promise.all(uploadPromises);
+    } catch (error) {
+      throw wrapError(error);
+    }
   },
 };
 
-export default api;
+export default supabase;
