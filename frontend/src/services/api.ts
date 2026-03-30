@@ -11,20 +11,22 @@ const wrapError = (err: any) => {
 export interface Product {
   id: any;
   code: string;
+  sku: string; // Added sku as it is mandatory in DB
   name: string;
-  category: string;
-  brand: string;
-  categoryId?: any;
-  brandId?: any;
+  category?: string;
+  brand?: string;
+  category_id?: any;
+  brand_id?: any;
+  category_id_backup?: any; // To track issues if any
   categoryRel?: Category;
   brandRel?: Brand;
   unit: string;
   barcode: string;
-  sellPrice: number;
-  minStock: number;
+  price: number;
+  min_stock: number;
   image: string;
   status: string;
-  createdAt: string;
+  created_at: string;
 }
 
 export const productsApi = {
@@ -99,7 +101,7 @@ export interface Supplier {
   email: string;
   address: string;
   note: string;
-  createdAt: string;
+  created_at: string;
 }
 
 export const suppliersApi = {
@@ -163,25 +165,25 @@ export const suppliersApi = {
 // ─── IMPORT RECEIPTS ─────────────────────────
 export interface ImportReceiptItem {
   id?: any;
-  productId: any;
-  productName?: string;
+  product_id: any;
+  product_name?: string;
   quantity: number;
-  importPrice: number;
-  totalPrice?: number;
+  import_price: number;
+  total_price?: number;
   imeis?: string[];
 }
 
 export interface ImportReceipt {
   id: any;
   code: string;
-  supplierId: any;
+  supplier_id: any;
   supplier?: Supplier;
-  importDate: string;
-  totalAmount: number;
+  receipt_date: string;
+  total_amount: number;
   note: string;
   status: string;
   items: ImportReceiptItem[];
-  createdAt: string;
+  created_at: string;
 }
 
 export const importsApi = {
@@ -239,34 +241,34 @@ export const importsApi = {
 
 // ─── STOCKS ──────────────────────────────────
 export interface StockSummary {
-  productId: any;
-  productCode: string;
-  productName: string;
+  product_id: any;
+  product_code: string;
+  product_name: string;
   category: string;
   brand: string;
-  minStock: number;
-  totalRemaining: number;
-  totalImported: number;
-  lowStock: boolean;
+  min_stock: number;
+  total_remaining: number;
+  total_imported: number;
+  low_stock: boolean;
 }
 
 export interface StockMovement {
   id: any;
-  productId: any;
-  productName: string;
-  referenceType: string;
-  referenceId: any;
-  referenceCode: string;
+  product_id: any;
+  product_name: string;
+  reference_type: string;
+  reference_id: any;
+  reference_code: string;
   quantity: number;
-  movementType: string;
-  createdAt: string;
+  movement_type: string;
+  created_at: string;
 }
 
 export interface DashboardStats {
-  totalProducts: number;
-  totalStock: number;
-  lowStockCount: number;
-  recentMovements: StockMovement[];
+  total_products: number;
+  total_stock: number;
+  low_stock_count: number;
+  recent_movements: StockMovement[];
 }
 
 export const stocksApi = {
@@ -326,8 +328,8 @@ export const stocksApi = {
 // ─── SALES ───────────────────────────────────
 export interface SalesInvoiceItem {
   id?: any;
-  productId: any;
-  productName?: string;
+  product_id: any;
+  product_name?: string;
   quantity: number;
   price: number;
   total?: number;
@@ -337,13 +339,13 @@ export interface SalesInvoiceItem {
 export interface SalesInvoice {
   id: any;
   code: string;
-  customerName: string;
-  customerPhone: string;
-  totalAmount: number;
+  customer_name: string;
+  customer_phone: string;
+  total_amount: number;
   note: string;
   status: string;
   items: SalesInvoiceItem[];
-  createdAt: string;
+  created_at: string;
 }
 
 export const salesApi = {
@@ -369,11 +371,27 @@ export const salesApi = {
     try {
       const { data, error } = await supabase
         .from('sales_invoices')
-        .select('*, items:sales_invoice_items(*)')
+        .select(`
+          *,
+          items:sales_items(
+            *,
+            product:products(name)
+          )
+        `)
         .eq('id', id)
         .single();
       if (error) throw error;
-      return data;
+      
+      // Flatten product name for UI if needed
+      const mapped = {
+        ...data,
+        items: (data.items || []).map((it: any) => ({
+          ...it,
+          product_name: it.product?.name
+        }))
+      };
+      
+      return mapped;
     } catch (error) {
       throw wrapError(error);
     }
@@ -404,7 +422,7 @@ export interface Category {
   name: string;
   prefix: string;
   description: string;
-  createdAt: string;
+  created_at: string;
 }
 
 export const categoriesApi = {
@@ -452,7 +470,7 @@ export interface Brand {
   name: string;
   origin: string;
   description: string;
-  createdAt: string;
+  created_at: string;
 }
 
 export const brandsApi = {
@@ -497,55 +515,78 @@ export const brandsApi = {
 // ─── REPAIRS ─────────────────────────────────
 export interface RepairOrderItem {
   id: any;
-  serviceId: any;
-  serviceName: string;
-  serviceType: 'REPAIR' | 'REPLACEMENT';
-  productId?: any;
+  service_id: any;
+  service_name: string;
+  service_type: 'REPAIR' | 'REPLACEMENT';
+  product_id?: any;
   quantity: number;
   price: number;
   total: number;
-  createdAt: string;
+  created_at: string;
 }
 
 export interface RepairOrder {
   id: any;
   code: string;
-  customerId?: any;
-  customerName?: string;
-  customerPhone?: string;
-  deviceName: string;
+  customer_id?: any;
+  customer_name?: string;
+  customer_phone?: string;
+  device_name: string;
   imei?: string;
-  issueDescription?: string;
-  receivedDate: string;
-  expectedReturnDate?: string;
-  totalAmount: number;
+  issue_description?: string;
+  received_date: string;
+  expected_return_date?: string;
+  total_amount: number;
   status: string;
   note?: string;
   items: RepairOrderItem[];
   logs: any[];
-  createdAt: string;
+  created_at: string;
 }
 
 export interface RepairService {
   id: any;
   name: string;
-  serviceType: 'REPAIR' | 'REPLACEMENT';
-  defaultPrice: number;
-  productId?: any;
+  service_type: 'REPAIR' | 'REPLACEMENT';
+  default_price: number;
+  product_id?: any;
   description?: string;
   status: string;
-  createdAt: string;
+  created_at: string;
 }
 
 export const repairsApi = {
   getAll: async (params: any = {}) => {
     try {
-      const { data, error } = await supabase
+      const { page = 1, limit = 15 } = params;
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
+      const { data, count, error } = await supabase
         .from('repairs')
-        .select('*, items:repair_items(*)')
+        .select(`
+          *,
+          items:repair_items(
+            *,
+            service:repair_services(name, service_type)
+          )
+        `, { count: 'exact' })
+        .range(from, to)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data || [];
+
+      // Map to flatten service details if the UI expects it.
+      // Based on RepairsPage.tsx line 482, it expects it.service_name
+      const mapped = (data || []).map(r => ({
+        ...r,
+        items: (r.items || []).map((it: any) => ({
+          ...it,
+          service_name: it.service?.name,
+          service_type: it.service?.service_type
+        }))
+      }));
+
+      return { data: mapped, total: count || 0 };
     } catch (error) {
       throw wrapError(error);
     }
@@ -554,11 +595,28 @@ export const repairsApi = {
     try {
       const { data, error } = await supabase
         .from('repairs')
-        .select('*, items:repair_items(*)')
+        .select(`
+          *,
+          items:repair_items(
+            *,
+            service:repair_services(name, service_type)
+          ),
+          logs:repair_logs(*)
+        `)
         .eq('id', id)
         .single();
       if (error) throw error;
-      return data;
+
+      const mapped = {
+        ...data,
+        items: (data.items || []).map((it: any) => ({
+          ...it,
+          service_name: it.service?.name,
+          service_type: it.service?.service_type
+        }))
+      };
+
+      return mapped;
     } catch (error) {
       throw wrapError(error);
     }
@@ -583,7 +641,12 @@ export const repairsApi = {
   },
   addService: async (id: any, data: any) => {
     try {
-      const { data: result, error } = await supabase.from('repair_items').insert([{ ...data, repair_id: id }]).select().single();
+      const payload = {
+        ...data,
+        repair_id: id,
+        total: data.total || (data.quantity * data.price)
+      };
+      const { data: result, error } = await supabase.from('repair_items').insert([payload]).select().single();
       if (error) throw error;
       return result;
     } catch (error) {
@@ -599,7 +662,7 @@ export const repairsApi = {
       throw wrapError(error);
     }
   },
-  removeItem: async (id: any, itemId: any) => {
+  removeItem: async (_id: any, itemId: any) => {
     try {
       const { error } = await supabase.from('repair_items').delete().eq('id', itemId);
       if (error) throw error;
@@ -669,12 +732,12 @@ export const repairsApi = {
 export interface SocialAccount {
   id: any;
   platform: string;
-  pageName: string;
-  pageId: string;
-  accessToken: string;
-  apiUrl: string;
+  page_name: string;
+  page_id: string;
+  access_token: string;
+  api_url: string;
   status: string;
-  createdAt: string;
+  created_at: string;
 }
 
 export const socialAccountsApi = {
@@ -737,17 +800,17 @@ export const socialAccountsApi = {
 // ─── SOCIAL POSTS ────────────────────────────
 export interface PostImage {
   id: any;
-  postId: any;
-  imageUrl: string;
+  post_id: any;
+  image_url: string;
 }
 
 export interface PostPlatformStatus {
   id: any;
-  postId: any;
-  accountId: any;
+  post_id: any;
+  account_id: any;
   status: string;
   response: string;
-  postedAt: string;
+  posted_at: string;
   account: SocialAccount;
 }
 
@@ -756,10 +819,10 @@ export interface SocialPostItem {
   title: string;
   content: string;
   status: string;
-  scheduledTime: string;
-  isRepeated: boolean;
-  repeatInterval: number;
-  createdAt: string;
+  scheduled_time: string;
+  is_repeated: boolean;
+  repeat_interval: number;
+  created_at: string;
   images: PostImage[];
   platforms: PostPlatformStatus[];
 }
@@ -767,12 +830,21 @@ export interface SocialPostItem {
 export const socialPostsApi = {
   getAll: async (params: any = {}) => {
     try {
-      const { data, error } = await supabase
+      const { page = 1, limit = 15 } = params;
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
+      const { data, count, error } = await supabase
         .from('social_posts')
-        .select('*, images:post_images(*), platforms:post_platform_status(*, account:social_accounts(*))')
+        .select(`
+          *,
+          platforms:post_platform_status(*, account:social_accounts(*)),
+          images:post_images(*)
+        `, { count: 'exact' })
+        .range(from, to)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data || [];
+      return { data: data || [], total: count || 0 };
     } catch (error) {
       throw wrapError(error);
     }
@@ -781,7 +853,11 @@ export const socialPostsApi = {
     try {
       const { data, error } = await supabase
         .from('social_posts')
-        .select('*, images:post_images(*), platforms:post_platform_status(*, account:social_accounts(*))')
+        .select(`
+          *,
+          platforms:post_platform_status(*, account:social_accounts(*)),
+          images:post_images(*)
+        `)
         .eq('id', id)
         .single();
       if (error) throw error;
